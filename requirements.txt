@@ -1,0 +1,7 @@
+# Core Language Model, Training, and Evaluation Dependencies
+torch>=2.2.0
+tiktoken>=0.7.0
+datasets>=2.18.0
+numpy>=1.26.0
+pytest>=8.0.0
+tqdm>=4.66.0
