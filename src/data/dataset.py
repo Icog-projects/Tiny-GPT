@@ -1,91 +1,91 @@
-"""Dataset loading, document boundary extraction, and context-window chunking.
 
-This module provides functions and classes for:
-1. Loading official splits of the WikiText-2 raw dataset without cross-split leakage.
-2. Grouping raw lines into discrete documents using a top-level Wikipedia header heuristic.
-3. Appending the special <|endoftext|> (EOT) token exactly once per document.
-4. Constructing causal next-token prediction sample pairs (x, y) of exact length T
-   from (T + 1)-token contiguous slices within each document.
-5. Providing a standard PyTorch Dataset and DataLoader interface.
+"""Dataset loading, document extraction, and context-window creation.
 
-CRITICAL INVARIANTS:
-- Every training sample consists of x = chunk[0:T] and y = chunk[1:T+1].
-- Both x and y have shape (T,) and dtype torch.long.
-- Exact 1-token shift: y[i] == x[i+1] for 0 <= i < T-1, and y[T-1] is the (T+1)-th token.
-- No window ever crosses a document boundary.
-- No network requests or dataset downloads occur at module import time.
+This module supports:
+1. Loading WikiText-2 train, validation, and test splits.
+2. Extracting documents using a top-level article-header heuristic.
+3. Tokenizing documents and optionally appending the EOT token.
+4. Creating causal next-token prediction samples.
+5. Providing a PyTorch Dataset and DataLoader.
+
+Each sample uses T + 1 consecutive tokens:
+    x = chunk[:T]
+    y = chunk[1:T + 1]
+
+Therefore, y is shifted one token ahead of x.
+
+Windows never cross document boundaries. Dataset loading occurs only when
+load_wikitext_split() is called.
 """
 
 import re
 from typing import List, Optional, Set, Tuple
+
 import torch
 from torch.utils.data import DataLoader, Dataset
+
 from src.data.tokenizer import GPT2Tokenizer
 
-# Top-level article header pattern in WikiText-2 raw.
-# Example: " = Homura Akemi = \n"
-# NOTE ON HEURISTIC:
-# In WikiText-2, top-level article titles are flanked by a single '=' on each side.
-# Section headers use nested '=' signs (e.g., ' = = Section = = ' or ' = = = Sub = = = ').
-# This heuristic is specific to the standard WikiText-2 formatting convention.
-# It is not a universal markup parser. Subsections and ordinary text lines remain
-# within their parent document.
+
+# Matches top-level headers such as:
+# " = Homura Akemi = "
 ARTICLE_HEADER_PATTERN = re.compile(r"^\s*=\s+([^=]+?)\s+=\s*$")
 
 
 def is_article_header(line: str) -> bool:
-    """Checks whether a line matches the top-level article header heuristic.
+    """Return True for a top-level article header.
 
-    Args:
-        line: Raw text line to inspect.
+    WikiText-2 table-column labels can also match the general header pattern.
+    Those labels commonly contain semicolons, so exclude them.
 
-    Returns:
-        True if the line represents a top-level article header; False otherwise.
+    This is a dataset-specific heuristic, not a universal Wikipedia parser.
     """
-    return bool(ARTICLE_HEADER_PATTERN.match(line.strip()))
+    match = ARTICLE_HEADER_PATTERN.match(line.strip())
+
+    if not match:
+        return False
+
+    # Avoid treating table-column labels as article boundaries.
+    if ";" in match.group(1):
+        return False
+
+    return True
 
 
 def extract_documents_from_raw_lines(lines: List[str]) -> List[str]:
-    """Groups raw lines into distinct documents using top-level header boundaries.
+    """Group raw text lines into documents using article-header boundaries.
 
     Policy:
-    - Top-level headers (' = Title = ') mark the beginning of a new article.
-    - Subsections (' = = Heading = = ') and content lines belong to the active article.
-    - Blank lines (whitespace only) are treated as paragraph breaks and are collapsed
-      into newlines rather than creating empty documents or spurious boundaries.
-    - If no lines in the input match the top-level header heuristic, all content lines
-      are safely grouped into a single continuous document.
-
-    Args:
-        lines: Sequence of raw text lines (e.g. from WikiText rows).
-
-    Returns:
-        List of non-empty document strings.
+    - A recognized top-level article header starts a new document.
+    - Blank or whitespace-only lines are ignored.
+    - Other non-empty lines remain in the current document.
+    - If no headers are found, all non-empty lines form one document.
     """
     documents: List[str] = []
     current_doc_lines: List[str] = []
 
     for raw_line in lines:
         stripped = raw_line.strip()
+
         if not stripped:
-            # Blank line: paragraph separator; do not start a document solely from blank lines
             continue
 
         if is_article_header(stripped):
-            # Finish previous document if it accumulated content
             if current_doc_lines:
-                doc_text = "\n".join(current_doc_lines).strip()
-                if doc_text:
-                    documents.append(doc_text)
+                document = "\n".join(current_doc_lines).strip()
+
+                if document:
+                    documents.append(document)
+
                 current_doc_lines = []
 
         current_doc_lines.append(stripped)
 
-    # Append any remaining accumulated lines
     if current_doc_lines:
-        doc_text = "\n".join(current_doc_lines).strip()
-        if doc_text:
-            documents.append(doc_text)
+        document = "\n".join(current_doc_lines).strip()
+
+        if document:
+            documents.append(document)
 
     return documents
 
@@ -95,33 +95,26 @@ def tokenize_documents(
     tokenizer: GPT2Tokenizer,
     append_eot: bool = True,
 ) -> List[List[int]]:
-    """Encodes a list of document strings into token ID lists, optionally appending EOT.
+    """Encode each non-empty document into GPT-2 token IDs.
 
-    EOT Handling:
-    - When append_eot is True, the tokenizer's actual integer EOT ID (50256) is appended
-      directly to the token list exactly once per non-empty document.
-    - Direct integer insertion avoids string-parsing ambiguity and guarantees that EOT
-      is not duplicated or rejected by disallowed special-token guards.
-
-    Args:
-        documents: List of clean document strings.
-        tokenizer: Initialized GPT2Tokenizer instance.
-        append_eot: Whether to append EOT token ID at the end of each document.
-
-    Returns:
-        List of integer token ID lists, one per non-empty document.
+    When append_eot is True, append the tokenizer's end-of-text token ID
+    once to each non-empty document. Empty documents are skipped.
     """
     tokenized_docs: List[List[int]] = []
     eot_id = tokenizer.eot_token_id
 
-    for doc in documents:
-        if not doc.strip():
+    for document in documents:
+        if not document.strip():
             continue
-        tokens = tokenizer.encode(doc)
+
+        tokens = tokenizer.encode(document)
+
         if not tokens:
             continue
+
         if append_eot:
             tokens.append(eot_id)
+
         tokenized_docs.append(tokens)
 
     return tokenized_docs
@@ -133,87 +126,78 @@ def build_chunks_from_token_lists(
     stride: Optional[int] = None,
     include_end_chunk: bool = True,
 ) -> List[Tuple[torch.Tensor, torch.Tensor]]:
-    """Constructs causal next-token prediction sample pairs (x, y) from token lists.
+    """Create input/target pairs for causal next-token prediction.
 
-    For every sample:
-    - A contiguous slice of exactly T + 1 tokens is extracted from the same document.
-    - x = chunk[0:T]
-    - y = chunk[1:T+1]
-    - Both tensors have shape (T,) and dtype torch.long.
-    - Exact 1-token shift invariant: y[i] == x[i+1] for 0 <= i < T-1.
-    - y[T-1] is the (T+1)-th token in the chunk.
+    For context length T, each sample contains T input tokens and T target
+    tokens. The target is shifted one position ahead of the input.
 
-    Stride & Start Positions:
-    - Regular starts begin at 0, stride, 2*stride, ... as long as s + T + 1 <= len(tokens).
-    - If stride is None, stride defaults to context_length (non-overlapping input blocks).
+    Regular windows start at positions 0, stride, 2*stride, and so on.
+    If stride is omitted, it defaults to context_length.
 
-    End-Anchored Window & Deduplication:
-    - To ensure the model learns to predict EOT at document termination, when
-      include_end_chunk is True and len(tokens) >= T + 1, a final window anchored
-      at the end of the document is evaluated: s_end = len(tokens) - (T + 1).
-    - Deduplication: If s_end was already generated by regular stride starts, it is NOT
-      duplicated.
-    - Note on Overlap: When added, s_end overlaps earlier windows, meaning some token
-      transitions will be sampled more than once in training.
+    If include_end_chunk is True, an additional window anchored at the end
+    of a document is included when its starting position was not already
+    used. This can cause some token transitions to appear more than once.
 
-    Short Documents:
-    - Documents with strictly fewer than T + 1 tokens are omitted without padding.
-
-    Args:
-        token_lists: List of token ID sequences (one list per document).
-        context_length: Context window length T (default: 64).
-        stride: Step size between consecutive window starts (default: context_length).
-        include_end_chunk: Whether to include an end-anchored window to capture EOT.
-
-    Returns:
-        List of (x, y) tensor tuples.
+    Documents shorter than T + 1 tokens are skipped without padding.
+    Windows never cross document boundaries.
     """
     if context_length < 1:
-        raise ValueError(f"context_length must be >= 1, got {context_length}.")
+        raise ValueError(
+            f"context_length must be >= 1, got {context_length}."
+        )
 
-    t = context_length
-    s_step = stride if stride is not None else t
-    if s_step < 1:
-        raise ValueError(f"stride must be >= 1, got {s_step}.")
+    step = stride if stride is not None else context_length
+
+    if step < 1:
+        raise ValueError(f"stride must be >= 1, got {step}.")
 
     samples: List[Tuple[torch.Tensor, torch.Tensor]] = []
+    t = context_length
 
     for tokens in token_lists:
-        m = len(tokens)
-        if m < t + 1:
-            # Document too short to form a single full (T + 1)-token window; skip without padding
+        n_tokens = len(tokens)
+
+        if n_tokens < t + 1:
             continue
 
         used_starts: Set[int] = set()
+        start = 0
 
-        # 1. Regular stride-based starts: s = 0, stride, 2*stride, ...
-        s = 0
-        while s + t + 1 <= m:
-            chunk = tokens[s : s + t + 1]
-            x_tensor = torch.tensor(chunk[:t], dtype=torch.long)
-            y_tensor = torch.tensor(chunk[1 : t + 1], dtype=torch.long)
-            samples.append((x_tensor, y_tensor))
-            used_starts.add(s)
-            s += s_step
+        # Create regular windows containing T + 1 tokens each.
+        while start + t + 1 <= n_tokens:
+            chunk = tokens[start : start + t + 1]
 
-        # 2. Optional end-anchored window: s_end = m - (t + 1)
+            x = torch.tensor(chunk[:t], dtype=torch.long)
+            y = torch.tensor(chunk[1 : t + 1], dtype=torch.long)
+
+            samples.append((x, y))
+            used_starts.add(start)
+
+            start += step
+
+        # Optionally include a final window aligned with the document end.
         if include_end_chunk:
-            s_end = m - (t + 1)
-            if s_end not in used_starts:
-                chunk = tokens[s_end : s_end + t + 1]
-                x_tensor = torch.tensor(chunk[:t], dtype=torch.long)
-                y_tensor = torch.tensor(chunk[1 : t + 1], dtype=torch.long)
-                samples.append((x_tensor, y_tensor))
-                used_starts.add(s_end)
+            end_start = n_tokens - (t + 1)
+
+            if end_start not in used_starts:
+                chunk = tokens[end_start : end_start + t + 1]
+
+                x = torch.tensor(chunk[:t], dtype=torch.long)
+                y = torch.tensor(chunk[1 : t + 1], dtype=torch.long)
+
+                samples.append((x, y))
+                used_starts.add(end_start)
 
     return samples
 
 
 class GPTDataset(Dataset):
-    """PyTorch Dataset yielding (x, y) tensor pairs for causal language modeling."""
+    """PyTorch Dataset that returns input/target tensor pairs."""
 
-    def __init__(self, samples: List[Tuple[torch.Tensor, torch.Tensor]]) -> None:
-        """Initializes the dataset with pre-chunked (x, y) tensor pairs."""
+    def __init__(
+        self,
+        samples: List[Tuple[torch.Tensor, torch.Tensor]],
+    ) -> None:
         self.samples = samples
 
     def __len__(self) -> int:
@@ -229,19 +213,14 @@ def create_dataloader(
     shuffle: bool = True,
     drop_last: bool = False,
 ) -> DataLoader:
-    """Wraps a GPTDataset in a standard PyTorch DataLoader.
+    """Create a DataLoader yielding batches of input and target tensors.
 
-    Yields batches of inputs and targets with shape (B, T) and dtype torch.long.
-
-    Args:
-        dataset: Initialized GPTDataset.
-        batch_size: Batch size B.
-        shuffle: Whether to shuffle samples at each epoch.
-        drop_last: Whether to drop the last incomplete batch.
-
-    Returns:
-        PyTorch DataLoader.
+    Each batch has shape (batch_size, context_length), except that the final
+    batch can be smaller when drop_last=False.
     """
+    if batch_size < 1:
+        raise ValueError(f"batch_size must be >= 1, got {batch_size}.")
+
     return DataLoader(
         dataset,
         batch_size=batch_size,
@@ -256,25 +235,27 @@ def load_wikitext_split(
     config_name: str = "wikitext-2-raw-v1",
     cache_dir: Optional[str] = None,
 ) -> List[str]:
-    """Loads raw text rows for the specified split from Hugging Face Datasets.
+    """Load raw text rows from a Hugging Face WikiText dataset split.
 
-    IMPORTANT SAFETY:
-    - This function connects to Hugging Face and downloads/caches data ONLY when called.
-    - It is never called during module import or offline unit tests.
-    - Validates split name to prevent accidentally mixing train, validation, or test data.
+    Valid splits are train, validation, and test. The dataset is loaded only
+    when this function is called, not when this module is imported.
 
     Args:
-        split: One of 'train', 'validation', or 'test'.
+        split: Dataset split to load.
         dataset_name: Hugging Face dataset identifier.
-        config_name: Dataset configuration name.
-        cache_dir: Optional custom cache directory.
+        config_name: Dataset configuration.
+        cache_dir: Optional custom dataset cache directory.
 
     Returns:
-        List of raw string lines from the dataset.
+        A list containing the text from each dataset row.
     """
     valid_splits = {"train", "validation", "test"}
+
     if split not in valid_splits:
-        raise ValueError(f"Invalid split '{split}'. Expected one of {sorted(valid_splits)}.")
+        raise ValueError(
+            f"Invalid split '{split}'. "
+            f"Expected one of {sorted(valid_splits)}."
+        )
 
     from datasets import load_dataset
 
@@ -284,4 +265,5 @@ def load_wikitext_split(
         split=split,
         cache_dir=cache_dir,
     )
+
     return [row["text"] for row in hf_dataset]

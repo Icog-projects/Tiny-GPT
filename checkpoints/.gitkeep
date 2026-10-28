@@ -1,0 +1,2 @@
+# This directory holds trained PyTorch model checkpoints (*.pt).
+# Model weight binaries are excluded from Git tracking via .gitignore.

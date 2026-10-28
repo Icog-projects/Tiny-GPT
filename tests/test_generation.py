@@ -109,3 +109,73 @@ def test_standalone_inference_from_saved_checkpoint(mini_gpt: GPT, tokenizer: GP
 
     # Both models must produce bit-for-bit identical text under greedy decoding
     assert out1 == out2
+
+
+def test_backend_service_default_checkpoint_path():
+    """Verifies that the backend service defaults to checkpoints/tiny_gpt_wikitext2_60k_best.pt."""
+    import backend.service as svc
+    assert svc.DEFAULT_CHECKPOINT_PATH == "checkpoints/tiny_gpt_wikitext2_60k_best.pt"
+
+
+def test_resolve_checkpoint_path_relative():
+    """Verifies that resolve_checkpoint_path resolves relative paths against the project root."""
+    import os
+    import backend.service as svc
+    resolved = svc.resolve_checkpoint_path("checkpoints/tiny_gpt_wikitext2_60k_best.pt")
+    assert os.path.isabs(resolved)
+    assert os.path.isfile(resolved)
+
+
+def test_backend_service_missing_checkpoint_handling(monkeypatch):
+    """Verifies that backend service handles missing checkpoints gracefully without crashing."""
+    import backend.service as svc
+
+    # Ensure clean service state
+    svc.unload_model()
+    monkeypatch.setenv("TINY_GPT_CHECKPOINT", "checkpoints/non_existent_dummy_checkpoint.pt")
+
+    svc.load_model()
+    assert not svc.is_model_loaded()
+    assert svc._load_error is not None
+    assert "TINY_GPT_CHECKPOINT" in svc._load_error
+
+    with pytest.raises(RuntimeError, match="No valid checkpoint is configured"):
+        svc.run_generation(prompt="test", max_new_tokens=5)
+
+    svc.unload_model()
+
+
+def test_backend_service_env_variable_override(monkeypatch, tmp_path):
+    """Verifies that TINY_GPT_CHECKPOINT environment variable overrides the default path."""
+    import backend.service as svc
+
+    custom_path = str(tmp_path / "custom_checkpoint.pt")
+    monkeypatch.setenv("TINY_GPT_CHECKPOINT", custom_path)
+
+    svc.unload_model()
+    svc.load_model()
+
+    assert svc._checkpoint_path == custom_path
+    assert not svc.is_model_loaded()
+
+    svc.unload_model()
+
+
+def test_backend_service_loads_real_default_checkpoint(monkeypatch):
+    """Verifies that the backend service successfully loads the real trained checkpoint."""
+    import backend.service as svc
+
+    svc.unload_model()
+    monkeypatch.delenv("TINY_GPT_CHECKPOINT", raising=False)
+
+    svc.load_model()
+    assert svc.is_model_loaded()
+    assert svc._load_error is None
+    assert svc._model is not None
+    assert svc._tokenizer is not None
+
+    output = svc.run_generation(prompt="The history of science", max_new_tokens=5)
+    assert isinstance(output, str)
+    assert len(output) > 0
+
+    svc.unload_model()

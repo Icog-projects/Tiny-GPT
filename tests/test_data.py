@@ -93,6 +93,26 @@ def test_is_article_header_heuristic():
     assert is_article_header("   \n") is False
 
 
+def test_table_column_labels_are_not_article_headers():
+    """Verifies that table-column labels with semicolons are not treated as article headers."""
+    table_column_labels = [
+        "= Position ; GP =",
+        "= Goals ; A =",
+        "= Points ; PIM =",
+        "= Games Played ; TOI =",
+        "= Wins ; L =",
+        "= Overtime Losses ; GA =",
+        "= Saves ; Sv % =",
+    ]
+    for label in table_column_labels:
+        assert is_article_header(label) is False
+
+    assert is_article_header("= Valkyria Chronicles III =") is True
+    assert is_article_header("= Plain maskray =") is True
+
+    assert is_article_header("= = Gameplay = =") is False
+
+
 def test_extract_documents_from_raw_lines():
     """Tests that raw lines are grouped into distinct documents without splitting on blank lines."""
     synthetic_rows = [

@@ -1,4 +1,4 @@
-﻿# From ChatGPT to a Tiny GPT: How Language Models Work
+# From ChatGPT to a Tiny GPT: How Language Models Work
 
 An educational project implementing a small decoder-only, autoregressive GPT-style language model from scratch using Python and PyTorch for the iCog Labs assignment.
 
@@ -80,56 +80,64 @@ During training, autoregressive language models predict the immediate next token
 
 ---
 
-## 4. Target Repository Structure
+## 4. Repository Structure
 
-The following tree represents the **intended final project architecture**. Files will be created and verified progressively across each assignment task. Currently, only the initial setup files and package initializers have been created.
+The following tree represents the complete project architecture:
 
 ```text
 icog-gpt-model/
-â”œâ”€â”€ src/
-â”‚   â”œâ”€â”€ __init__.py           # [Implemented] Source package root
-â”‚   â”œâ”€â”€ data/
-â”‚   â”‚   â”œâ”€â”€ __init__.py       # [Implemented] Data package initializer
-â”‚   â”‚   â”œâ”€â”€ tokenizer.py      # [Implemented] tiktoken wrapper, encode/decode assertions
-â”‚   â”‚   â””â”€â”€ dataset.py        # [Implemented] Dataset, chunking, shifted targets (x, y)
-â”‚   â”œâ”€â”€ model/
-â”‚   â”‚   â”œâ”€â”€ __init__.py       # [Implemented] Model package initializer
-â”‚   â”‚   â”œâ”€â”€ config.py         # [Implemented] GPTConfig dataclass (hyperparameters)
-â”‚   â”‚   â”œâ”€â”€ attention.py      # [Implemented] Causal self-attention layer
-â”‚   â”‚   â”œâ”€â”€ feed_forward.py   # [Implemented] Feed-forward MLP network
-â”‚   â”‚   â”œâ”€â”€ block.py          # [Implemented] Transformer decoder block
-â”‚   â”‚   â””â”€â”€ gpt.py            # [Implemented] Full GPT model with LM head
-â”‚   â”œâ”€â”€ training/
-â”‚   â”‚   â”œâ”€â”€ __init__.py       # [Implemented] Training package initializer
-â”‚   â”‚   â””â”€â”€ trainer.py        # [Implemented] Training loop, loss tracking, checkpoint saving
-â”‚   â””â”€â”€ generation/
-â”‚       â”œâ”€â”€ __init__.py       # [Implemented] Generation package initializer
-â”‚       â””â”€â”€ generate.py       # [Implemented] Autoregressive decoding and checkpoint loader
-â”œâ”€â”€ tests/
-â”‚   â”œâ”€â”€ __init__.py           # [Implemented] Test package initializer
-â”‚   â”œâ”€â”€ test_data.py          # [Implemented] Tests for tokenization, target shifts, and shapes
-â”‚   â”œâ”€â”€ test_model.py         # [Implemented] Tests for forward pass shapes and causal mask
-â”‚   â”œâ”€â”€ test_training.py       # [Implemented] Tests for loss calculation, optimization, and evaluation
-â”‚   â””â”€â”€ test_generation.py    # [Implemented] Tests for autoregressive greedy decoding and checkpoint load
-â”œâ”€â”€ checkpoints/
-â”‚   â”œâ”€â”€ .gitkeep              # [Implemented] Keeps folder in git; binary weights are ignored
-â”‚   â””â”€â”€ tiny_gpt.pt           # [Generated] Trained checkpoint from verification run
-â”œâ”€â”€ backend/
-â”‚   â”œâ”€â”€ __init__.py           # [Implemented] Backend package initializer
-â”‚   â”œâ”€â”€ requirements.txt      # [Implemented] FastAPI & Uvicorn dependencies
-â”‚   â”œâ”€â”€ main.py               # [Planned - Optional] FastAPI application
-â”‚   â””â”€â”€ schemas.py            # [Planned - Optional] Pydantic request/response schemas
-â”œâ”€â”€ frontend/
-â”‚   â”œâ”€â”€ package.json          # [Planned - Optional] React + Vite dependencies
-â”‚   â”œâ”€â”€ index.html            # [Planned - Optional] Web entry point
-â”‚   â””â”€â”€ src/
-â”‚       â”œâ”€â”€ App.jsx           # [Planned - Optional] Chat interface component
-â”‚       â”œâ”€â”€ main.jsx          # [Planned - Optional] React DOM entry point
-â”‚       â””â”€â”€ App.css           # [Planned - Optional] Chat styling
-â”œâ”€â”€ README.md                 # [Implemented] Project documentation
-â”œâ”€â”€ requirements.txt          # [Implemented] Core dependencies for model, data, and training
-â”œâ”€â”€ .gitignore                # [Implemented] Excludes caches, venv, and large checkpoints
-â””â”€â”€ LICENSE                   # [Implemented] MIT License
+├── src/
+│   ├── __init__.py           # [Implemented] Source package root
+│   ├── data/
+│   │   ├── __init__.py       # [Implemented] Data package initializer
+│   │   ├── tokenizer.py      # [Implemented] tiktoken wrapper, encode/decode assertions
+│   │   └── dataset.py        # [Implemented] Dataset, chunking, shifted targets (x, y)
+│   ├── model/
+│   │   ├── __init__.py       # [Implemented] Model package initializer
+│   │   ├── config.py         # [Implemented] GPTConfig dataclass (hyperparameters)
+│   │   ├── attention.py      # [Implemented] Causal self-attention layer
+│   │   ├── feed_forward.py   # [Implemented] Feed-forward MLP network
+│   │   ├── block.py          # [Implemented] Transformer decoder block
+│   │   └── gpt.py            # [Implemented] Full GPT model with LM head
+│   ├── training/
+│   │   ├── __init__.py       # [Implemented] Training package initializer
+│   │   └── trainer.py        # [Implemented] Training loop, loss tracking, checkpoint saving
+│   └── generation/
+│       ├── __init__.py       # [Implemented] Generation package initializer
+│       └── generate.py       # [Implemented] Autoregressive decoding and checkpoint loader
+├── tests/
+│   ├── __init__.py           # [Implemented] Test package initializer
+│   ├── test_data.py          # [Implemented] Tests for tokenization, target shifts, and shapes
+│   ├── test_model.py         # [Implemented] Tests for forward pass shapes and causal mask
+│   ├── test_training.py      # [Implemented] Tests for loss calculation, optimization, and evaluation
+│   ├── test_generation.py    # [Implemented] Tests for autoregressive greedy decoding, backend service
+│   └── test_backend.py       # [Implemented] Tests for FastAPI endpoint using TestClient and mocks
+├── checkpoints/
+│   ├── .gitkeep              # [Implemented] Keeps folder in git; binary weights are ignored
+│   ├── tiny_gpt.pt           # [Generated] Trained checkpoint from verification run
+│   ├── wikitext2_smoke.pt    # [Generated] 15-step CPU smoke-test checkpoint
+│   └── tiny_gpt_wikitext2_60k_best.pt  # [Verified] 60k-step trained checkpoint from Kaggle
+├── backend/
+│   ├── __init__.py           # [Implemented] Backend package initializer
+│   ├── requirements.txt      # [Implemented] FastAPI & Uvicorn dependencies
+│   ├── main.py               # [Implemented] FastAPI application with POST /generate
+│   ├── schemas.py            # [Implemented] Pydantic request/response schemas
+│   └── service.py            # [Implemented] Model loader & inference service
+├── frontend/
+│   ├── package.json          # [Implemented] React 18 & Vite dependencies
+│   ├── vite.config.js        # [Implemented] Vite development server config
+│   ├── index.html            # [Implemented] HTML template with Google Fonts
+│   ├── .env.example          # [Implemented] Backend API URL template
+│   ├── README.md             # [Implemented] Dedicated frontend documentation
+│   └── src/
+│       ├── main.jsx          # [Implemented] React DOM entry point
+│       ├── App.jsx           # [Implemented] Single-page UI with prompt and controls
+│       ├── App.css           # [Implemented] Responsive stylesheet (light/indigo/dark output)
+│       └── api.js            # [Implemented] Fetch client for POST /generate
+├── README.md                 # [Implemented] Project documentation
+├── requirements.txt          # [Implemented] Core dependencies for model, data, and training
+├── .gitignore                # [Implemented] Excludes caches, venv, and large checkpoints
+└── LICENSE                   # [Implemented] MIT License
 ```
 
 ---
@@ -327,13 +335,112 @@ Task 3 brings the data pipeline (Task 1) and decoder-only Transformer architectu
 
 ---
 
-## 8. Verification Run Results & Generated Samples
+## 8. Training Results, Analysis & Generated Samples
 
-### Four Distinct Tiers of Verification
-1. **Offline Unit Tests (49 tests):** Validates architecture components, causal invariance, shape dimensions, tokenizer invariants, evaluation mode snapshots, and checkpoint roundtrips without network access.
-2. **Synthetic Data Verification (`--verification`):** Runs 10 synthetic steps to test edge-to-edge trainer mechanisms in under 1 second.
-3. **Real-Data WikiText-2 Smoke Test (`wikitext2_smoke.pt`):** Verified on actual `Salesforce/wikitext` raw training and validation data for 15 steps on CPU, confirming dataset processing, loss calculation, and independent inference.
-4. **Full Training (Pending Approval):** Multi-epoch training on the entire 74,355-sample WikiText-2 corpus.
+### Verified Training Results (60,000 Steps)
+
+The model was resumed from an earlier training checkpoint and trained up to step 60,000 using the Adam optimizer (`torch.optim.Adam`) on the WikiText-2 dataset. The table below reports the verified metrics recorded in the checkpoint metadata:
+
+<h3 align="center">Training Results</h3>
+
+<table align="center">
+  <tr>
+    <th>Metric</th>
+    <th>Training</th>
+    <th>Validation</th>
+  </tr>
+  <tr>
+    <th>Dataset</th>
+    <td>WikiText-2 training split</td>
+    <td>WikiText-2 validation split</td>
+  </tr>
+  <tr>
+    <th>Training Step</th>
+    <td>60,000</td>
+    <td>60,000</td>
+  </tr>
+  <tr>
+    <th>Cross-Entropy Loss</th>
+    <td>4.5646</td>
+    <td>5.1610</td>
+  </tr>
+  <tr>
+    <th>Perplexity</th>
+    <td>Approximately 96.0</td>
+    <td>Approximately 174.3</td>
+  </tr>
+  <tr>
+    <th>Evaluation Coverage</th>
+    <td>Recorded training loss</td>
+    <td>10 validation batches; not a full-split evaluation</td>
+  </tr>
+</table>
+
+<br/>
+
+> **Note on Perplexity Computation:** Perplexity is calculated as $P = e^{\mathcal{L}}$, where $\mathcal{L}$ is the cross-entropy loss:
+> - Training Perplexity: $e^{4.5646} \approx 96.02$
+> - Validation Perplexity: $e^{5.1610} \approx 174.34$
+> 
+> *Historical context:* Initial uniform random initialization over a 50,257-token vocabulary produces a cross-entropy loss of $\ln(50,257) \approx 10.825$ (perplexity $\approx 50,257$). Over the course of 60,000 training steps, loss reduced by more than 5.6 nats, representing substantial learning of English vocabulary and syntax.
+
+---
+
+### Training and Validation Loss Explanation
+
+Understanding how loss values behave during training provides insight into model convergence and linguistic generalization:
+
+1. **Training Loss:** Measures the average cross-entropy error on tokens seen during optimization. As the model adjusts its weights via Adam backpropagation, training loss steadily declines as it learns to assign higher probability to the ground-truth next token.
+2. **Validation Loss:** Measures prediction error on unseen, held-out text from the WikiText-2 validation split without updating model parameters (`model.eval()`). It quantifies how well the learned representations generalize beyond memorization.
+3. **Loss Dynamics & Overfitting:**
+   - *Healthy convergence:* Both training loss and validation loss drop in tandem.
+   - *Overfitting warning:* If training loss continues dropping toward zero while validation loss plateaus and begins rising, the network is memorizing specific n-gram sequences rather than learning general linguistic syntax. In this run, validation loss converged to $5.1610$ while training loss reached $4.5646$, demonstrating a modest generalization gap.
+4. **Validation Coverage Caveat:** The periodic validation loss was computed over 10 validation batches (20 samples per evaluation) for computational efficiency, providing an ongoing estimate rather than an exhaustive full-split benchmark.
+5. **Quality Caveat:** While 60,000 steps demonstrates stable convergence and parameter optimization from the training pipeline, a compact 6.5M parameter architecture trained on WikiText-2 learns local word associations and grammar fragments, but does not acquire general reasoning or long-range coherence.
+
+---
+
+### Genuine Generated Samples (from 60k Checkpoint)
+
+The following three text completions were generated directly by loading `checkpoints/tiny_gpt_wikitext2_60k_best.pt` using the standalone inference engine (`src.generation.generate`):
+
+#### Sample 1
+- **Prompt:** `"The history of science"`
+- **Generated Text:**
+```text
+The history of science fiction and the film 's music video .
+= = = = = =
+The film was released in the album , and the album 's album , and was released
+```
+
+#### Sample 2
+- **Prompt:** `"In the early twentieth century,"`
+- **Generated Text:**
+```text
+In the early twentieth century,@ century , the church was the first church of the church , and the church was built in the city of the church . The church was built in the city of the church
+```
+
+#### Sample 3
+- **Prompt:** `"The exploration of space"`
+- **Generated Text:**
+```text
+The exploration of space .
+= = = = = =
+The nucleus is a protein of the nucleus , and the nucleus is a protein of the nucleus , and is a protein of the nucleus
+```
+
+#### Output Analysis & Observations
+1. **Thematic Vocabulary Associations:** The model associates prompts with appropriate contextual domains (e.g., *science* $\rightarrow$ *science fiction, film*; *twentieth century* $\rightarrow$ *church, built, city*; *space* $\rightarrow$ *nucleus, protein*).
+2. **Wikipedia Header Tokens:** The appearance of `= = = = = =` reflects WikiText-2 section delimiters frequently present in the training corpus.
+3. **Greedy Decoding Loops:** Greedy selection ($\text{argmax}$) combined with a small context window ($T=32$) causes the model to settle into repetitive loops (e.g. *"the church was built in the city of the church"*). This is a well-documented characteristic of deterministic greedy decoding on compact language models, addressed in practice by stochastic sampling techniques (top-$k$, top-$p$, temperature scaling).
+
+---
+
+### Training Loss Curve Graph Placeholder
+
+Training and validation loss values across all 60,000 steps are preserved in structured JSON format in `checkpoints/tiny_gpt_wikitext2_60k_history.json`.
+
+*(Optional visualization: A matplotlib loss curve graph can be generated directly by reading `train_losses` and `val_losses` from the history JSON file. No static image file is bundled in this repository to keep the repository lightweight.)*
 
 ---
 
@@ -362,8 +469,8 @@ For training the full WikiText-2 dataset across multiple epochs, GPU acceleratio
 | **Real WikiText-2 Smoke Test** | CPU smoke run on actual WikiText-2 data, loss logging, checkpoint saving. | **Implemented** | `checkpoints/wikitext2_smoke.pt` created and validated on CPU. |
 | **Standalone Inference** | Loading saved checkpoint and generating text in a separate process without retraining. | **Implemented** | `python -m src.generation.generate` CLI verified in independent process. |
 | **Colab GPU Training** | Cloud training on full WikiText-2 GPU, loss logging, checkpoint export to Google Drive. | **Planned** | Runnable on Google Colab using existing code. |
-| **Task 4: Bonus Backend** | FastAPI server loading checkpoint at startup and exposing `POST /generate`. | **Optional / Planned** | Dependencies specified in `backend/requirements.txt`. |
-| **Task 5: Bonus Frontend** | React + Vite single-page chat UI communicating with FastAPI. | **Optional / Planned** | Scaffolding in `frontend/`. |
+| **Task 4: Bonus Backend** | FastAPI server loading checkpoint at startup and exposing `POST /generate`. | **Implemented** | `backend/main.py`, `backend/schemas.py`, `backend/service.py`, `tests/test_backend.py`. |
+| **Task 5: Bonus Frontend** | React + Vite single-page UI communicating with FastAPI. | **Implemented** | `frontend/src/App.jsx`, `frontend/src/api.js`, `frontend/src/App.css`. |
 
 ---
 
@@ -380,3 +487,258 @@ For training the full WikiText-2 dataset across multiple epochs, GPU acceleratio
 2. **Stochastic Sampling Strategies:** Adding temperature scaling, Top-$k$ sampling, and nucleus (Top-$p$) sampling to produce diverse and natural text completions.
 3. **Learning Rate Schedules:** Implementing linear warmup followed by cosine learning rate decay to stabilize optimization across thousands of steps.
 4. **FastAPI & React Chat Serving:** Completing the optional backend and frontend to deploy the trained model as an interactive web chat application.
+
+
+---
+
+## 12. FastAPI Backend — `POST /generate`
+
+This section documents the minimal REST API backend added in Task 4.
+It exposes **exactly one custom endpoint**: `POST /generate`.
+
+### Purpose
+
+The backend lets you query the trained Tiny GPT model over HTTP without
+running the Python CLI manually.  It loads the checkpoint once at startup and
+reuses the same model instance for every request.
+
+---
+
+### Backend File Overview
+
+| File | Purpose |
+| :--- | :--- |
+| `backend/__init__.py` | Package marker (pre-existing). |
+| `backend/requirements.txt` | FastAPI, Uvicorn, Pydantic, and httpx deps. |
+| `backend/schemas.py` | Pydantic `GenerateRequest` / `GenerateResponse` models. |
+| `backend/service.py` | Checkpoint loading, model singleton, and `run_generation()`. |
+| `backend/main.py` | FastAPI app with the single `POST /generate` endpoint. |
+| `tests/test_backend.py` | Offline pytest suite (all mocked; no real checkpoint needed). |
+
+---
+
+### Required Dependencies
+
+Install the backend dependencies into the project virtual environment:
+
+```powershell
+cd C:\Users\hp\Documents\Icog-gpt-model\icog-gpt-model
+.\.venv\Scripts\Activate.ps1
+pip install -r backend\requirements.txt
+```
+
+> The core model dependencies (`requirements.txt`) must already be installed.
+
+---
+
+### Configuring the Checkpoint Path
+
+The server reads the checkpoint path from the `TINY_GPT_CHECKPOINT` environment variable.
+
+```powershell
+# Set before starting the server (PowerShell)
+$env:TINY_GPT_CHECKPOINT = "C:\path\to\your\trained\checkpoint.pt"
+```
+
+A placeholder default is used when the variable is unset:
+
+```python
+DEFAULT_CHECKPOINT_PATH = "checkpoints/REPLACE_WITH_FINAL_CHECKPOINT.pt"
+```
+
+**If the checkpoint file does not exist:**
+- The server still starts.
+- `POST /generate` returns **HTTP 503 Service Unavailable** with a message
+  explaining that a valid checkpoint must be configured.
+
+---
+
+### Starting the Server
+
+```powershell
+cd C:\Users\hp\Documents\Icog-gpt-model\icog-gpt-model
+.\.venv\Scripts\Activate.ps1
+$env:TINY_GPT_CHECKPOINT = "checkpoints\wikitext2_smoke.pt"   # example path
+python -m uvicorn backend.main:app --reload
+```
+
+Interactive API documentation is automatically available at
+[http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs).
+
+---
+
+### Sending a Generation Request
+
+**PowerShell (`Invoke-RestMethod`):**
+
+```powershell
+Invoke-RestMethod `
+  -Uri "http://127.0.0.1:8000/generate" `
+  -Method Post `
+  -ContentType "application/json" `
+  -Body '{"prompt":"The history of science","max_new_tokens":30}'
+```
+
+**curl:**
+
+```bash
+curl -s -X POST http://127.0.0.1:8000/generate \
+  -H "Content-Type: application/json" \
+  -d '{"prompt":"The history of science","max_new_tokens":30}'
+```
+
+**Example response:**
+
+```json
+{
+  "prompt": "The history of science",
+  "generated_text": "The history of science the the the the ...",
+  "max_new_tokens": 30
+}
+```
+
+> **Note:** Output quality depends on training duration and dataset size.
+> A 15-step smoke-test checkpoint produces repetitive output; a fully trained
+> checkpoint produces more coherent text.
+
+---
+
+### Request / Response Schema
+
+**`POST /generate` request body:**
+
+| Field | Type | Required | Constraints | Default |
+| :--- | :--- | :--- | :--- | :--- |
+| `prompt` | `string` | Yes | max 2 000 characters | — |
+| `max_new_tokens` | `integer` | No | 1 – 500 | `50` |
+
+**Response body (HTTP 200):**
+
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `prompt` | `string` | The original prompt echoed back. |
+| `generated_text` | `string` | Full output including the prompt. |
+| `max_new_tokens` | `integer` | Requested token count. |
+
+**Error responses:**
+
+| Status | Condition |
+| :--- | :--- |
+| `422 Unprocessable Entity` | Invalid request body (Pydantic validation failure). |
+| `503 Service Unavailable` | Checkpoint missing, not configured, or failed to load. |
+
+---
+
+### Running the Backend Tests
+
+The backend tests are fully offline (no checkpoint, no dataset download).
+
+```powershell
+cd C:\Users\hp\Documents\Icog-gpt-model\icog-gpt-model
+.\.venv\Scripts\Activate.ps1
+pytest tests\test_backend.py -v
+```
+
+To run the full test suite (49 original + backend tests):
+
+```powershell
+pytest -v
+```
+
+---
+
+### Troubleshooting a Missing Checkpoint
+
+**Symptom:** `POST /generate` returns HTTP 503.
+
+**Cause:** The checkpoint file path is missing, wrong, or the file does not exist.
+
+**Fix:**
+
+1. Confirm the checkpoint file exists:
+   ```powershell
+   Test-Path $env:TINY_GPT_CHECKPOINT
+   ```
+2. Set the correct path and restart the server:
+   ```powershell
+   $env:TINY_GPT_CHECKPOINT = "C:\correct\path\to\checkpoint.pt"
+   python -m uvicorn backend.main:app --reload
+   ```
+3. If you have not yet trained a checkpoint, run the smoke test first:
+   ```powershell
+   python -m src.training.trainer --epochs 1 --batch_size 2 --context_length 32 `
+     --device cpu --eval_interval 5 --max_train_steps 15 `
+     --checkpoint_path checkpoints\wikitext2_smoke.pt
+   $env:TINY_GPT_CHECKPOINT = "checkpoints\wikitext2_smoke.pt"
+   python -m uvicorn backend.main:app --reload
+   ```
+
+
+---
+
+## 13. React Frontend — Single-Page Interface
+
+Task 5 provides a minimal, responsive, single-page React application built with [Vite](https://vitejs.dev/) to interactively query the Tiny GPT language model through the FastAPI backend.
+
+### Frontend Overview
+
+| File | Purpose |
+| :--- | :--- |
+| `frontend/package.json` | React 18 and Vite dependency definitions. |
+| `frontend/vite.config.js` | Vite development server configuration (port 5173 on 127.0.0.1). |
+| `frontend/index.html` | Entry HTML document with Google Fonts (Inter and JetBrains Mono). |
+| `frontend/.env.example` | Example environment configuration for `VITE_API_BASE_URL`. |
+| `frontend/src/main.jsx` | React DOM entry point. |
+| `frontend/src/App.jsx` | Main single-page component: prompt input, sample chips, token counter, loading state, and output display. |
+| `frontend/src/App.css` | Plain responsive CSS with light palette, dark output terminal, and mobile layout. |
+| `frontend/src/api.js` | Fetch API client for `POST /generate` with input validation and user-friendly error handling. |
+| `frontend/README.md` | Dedicated frontend setup and usage documentation. |
+
+---
+
+### Prerequisites & Installation
+
+Prerequisites:
+- **Node.js**: v18.0.0 or higher (v22+ supported)
+- **npm**: v9.0.0 or higher
+
+To install frontend dependencies (run once):
+
+```powershell
+cd C:\Users\hp\Documents\Icog-gpt-model\icog-gpt-model\frontend
+npm install
+```
+
+---
+
+### Running Frontend and Backend Together
+
+#### Terminal 1 — Start the Backend
+From the project root:
+
+```powershell
+cd C:\Users\hp\Documents\Icog-gpt-model\icog-gpt-model
+.\.venv\Scripts\python.exe -m uvicorn backend.main:app --reload
+```
+- Server URL: `http://127.0.0.1:8000`
+- Interactive API Docs: `http://127.0.0.1:8000/docs`
+
+#### Terminal 2 — Start the Frontend
+From the `frontend/` folder:
+
+```powershell
+cd C:\Users\hp\Documents\Icog-gpt-model\icog-gpt-model\frontend
+npm run dev
+```
+- Frontend UI: [http://127.0.0.1:5173](http://127.0.0.1:5173)
+
+---
+
+### Features
+
+1. **Clean Professional Header:** Project title, subtitle, badges showing architecture and training steps, and an educational summary.
+2. **Interactive Prompt Area:** Multiline text area, real-time character counter (max 2,000 chars), and sample prompt buttons.
+3. **Parameter Controls:** Max new tokens selector (1–500, default 50) strictly matching backend constraints.
+4. **Output Panel:** Terminal-style output preserving whitespace and line breaks, with an active loading animation, a one-click copy button with visual feedback, and a reset button.
+5. **Robust Error Handling:** Distinguishes between offline backend, missing checkpoint (503), invalid parameters (422), and empty prompts with human-readable error messages.
+6. **Educational Note:** Clarifies that the model is a small 6.5M-parameter educational demonstration, not a ChatGPT-level assistant.
