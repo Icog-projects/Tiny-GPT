@@ -34,6 +34,7 @@ checkpoints/tiny_gpt_wikitext2_60k_best.pt
 - Includes training code, generation utilities, a FastAPI backend, and a small React + Vite frontend.
 - Intended as an educational baseline and experimental project, not a production chatbot.
 
+
 ## Model Architecture
 
 The code in `src/model/config.py` defines a compact decoder-only Transformer with:
