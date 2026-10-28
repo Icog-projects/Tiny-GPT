@@ -64,17 +64,7 @@ export default function App() {
         {/* Header Section                                            */}
         {/* ========================================================= */}
         <header className="app-header">
-          <div className="badge-row">
-            <span className="badge">Decoder-Only Transformer</span>
-            <span className="badge badge-accent">WikiText-2 Trained (60k Steps)</span>
-          </div>
           <h1 className="app-title">Tiny GPT</h1>
-          <p className="app-subtitle">A Small GPT-Style Language Model</p>
-          <p className="app-description">
-            Generates text autoregressively using a small decoder-only Transformer built from
-            scratch with PyTorch and trained on the WikiText-2 corpus for the iCog Labs
-            assignment.
-          </p>
         </header>
 
         {/* ========================================================= */}
@@ -109,51 +99,11 @@ export default function App() {
                 aria-describedby="prompt-help"
               />
 
-              <div className="sample-prompts-row" id="prompt-help">
-                <span className="sample-label">Try an example:</span>
-                <div className="chip-container">
-                  {SAMPLE_PROMPTS.map((sample) => (
-                    <button
-                      key={sample}
-                      type="button"
-                      className="sample-chip"
-                      onClick={() => setPrompt(sample)}
-                      disabled={isLoading}
-                    >
-                      {sample}
-                    </button>
-                  ))}
-                </div>
-              </div>
             </div>
 
             {/* Controls Row */}
             <div className="controls-row">
-              <div className="control-item">
-                <label htmlFor="tokens-input" className="form-label">
-                  New Tokens to Generate
-                </label>
-                <div className="tokens-input-wrapper">
-                  <input
-                    id="tokens-input"
-                    type="number"
-                    className="number-input"
-                    min={API_LIMITS.MIN_NEW_TOKENS}
-                    max={API_LIMITS.MAX_NEW_TOKENS}
-                    value={maxNewTokens}
-                    onChange={(e) => {
-                      const val = Number.parseInt(e.target.value, 10);
-                      setMaxNewTokens(Number.isNaN(val) ? '' : val);
-                    }}
-                    disabled={isLoading}
-                  />
-                  <span className="input-hint">
-                    ({API_LIMITS.MIN_NEW_TOKENS}–{API_LIMITS.MAX_NEW_TOKENS})
-                  </span>
-                </div>
-              </div>
-
-              <div className="action-buttons">
+              <div className="action-buttons single-button-row">
                 {generatedResult && (
                   <button
                     type="button"
@@ -175,7 +125,7 @@ export default function App() {
                       Generating...
                     </span>
                   ) : (
-                    'Generate Text'
+                    'Generate'
                   )}
                 </button>
               </div>
@@ -234,21 +184,6 @@ export default function App() {
           )}
         </main>
 
-        {/* ========================================================= */}
-        {/* Footer Section                                            */}
-        {/* ========================================================= */}
-        <footer className="app-footer">
-          <p>
-            Built as an educational implementation of a small GPT-style language model for
-            iCog Labs.
-          </p>
-          <p className="footer-disclaimer">
-            This educational model was trained from scratch with 6.5M parameters on
-            WikiText-2. It demonstrates the fundamental mechanics of autoregressive
-            Transformers and does not possess ChatGPT-level conversational fluency or
-            reasoning.
-          </p>
-        </footer>
       </div>
     </div>
   );
