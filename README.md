@@ -18,8 +18,8 @@ checkpoints/tiny_gpt_wikitext2_60k_best.pt
 
 <p align="center">
   <!-- Use this exact path or update the image src to match the uploaded filename -->
-  <img
-    src="<img width="650" height="392" alt="image" src="https://github.com/user-attachments/assets/53604cc3-eefa-417d-9d55-ea106c2a9263" />
+ <img width="650" height="392" alt="image" src="https://github.com/user-attachments/assets/6c385a30-4c5c-4a09-9e12-6ded2d1267ca" />
+
 "
     alt="Training and validation loss across training steps"
     width="800"
