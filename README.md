@@ -165,5 +165,5 @@ pytest tests\test_model.py tests\test_data.py tests\test_training.py tests\test_
 
 - Model capacity is limited by the small architecture and short context window.
 - Greedy decoding can lead to repetitive text loops.
-- The project is best viewed as an educational baseline for understanding autoregressive Transformer behavior.
+- The project is best viewed as an educational baseline for understanding greedy decoding Transformer behavior.
 - Larger models, more context, and stronger decoding strategies would improve coherence and diversity.
